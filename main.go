@@ -13,7 +13,6 @@ var numB string
 var op string
 var usertext string
 var rimsk bool
-var inttest int
 var res int
 
 var numRimsk = map[string]int{
@@ -33,46 +32,71 @@ var numRimsk = map[string]int{
 	"I":    1,
 }
 
-var numIntToRimsk = map[int]string{
-	100: "C",
-	90:  "XC",
-	50:  "L",
-	40:  "XL",
-	10:  "X",
-	9:   "IX",
-	8:   "VIII",
-	7:   "VII",
-	6:   "VI",
-	5:   "V",
-	4:   "IV",
-	3:   "III",
-	2:   "II",
-	1:   "I",
+var numIntToRimsk = [14]int{
+	100,
+	90,
+	50,
+	40,
+	10,
+	9,
+	8,
+	7,
+	6,
+	5,
+	4,
+	3,
+	2,
+	1,
 }
 
-var opMap = map[string]bool{
-	"+": true,
-	"-": true,
-	"*": true,
-	"/": true,
+var a, b *int
+var opMap = map[string]func() int{
+	"+": func() int { return *a + *b },
+	"-": func() int { return *a - *b },
+	"/": func() int { return *a / *b },
+	"*": func() int { return *a * *b },
+}
+
+func intToRimsk(inputResult int) {
+	var romanNum string
+	for _, mapItem := range numIntToRimsk {
+		for i := mapItem; i <= inputResult; {
+			for in, value := range numRimsk {
+				if value == mapItem {
+					romanNum += in
+					inputResult -= mapItem
+				}
+			}
+		}
+	}
+	fmt.Println(romanNum)
 }
 
 func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-
-		fmt.Println("Введите выражение (a + b), добавьте пробел и нажмите Enter")
+		op = ""
+		fmt.Println("Введите выражение и нажмите Enter")
 		usertext, _ = reader.ReadString('\n')
-		numA = strings.Split(usertext, " ")[0]
-		numB = strings.Split(usertext, " ")[2]
-		op = strings.Split(usertext, " ")[1]
-		intA, _ := strconv.Atoi(numA)
-		intB, _ := strconv.Atoi(numB)
+		usertext = strings.ReplaceAll(usertext, " ", "")
+		// op = strings.Split(usertext, "")[1]
 
-		if opMap[op] == false {
-			panic("Ошибка. Неверная арифметическая операция")
+		for idx := range opMap {
+			for _, val := range usertext {
+				if idx == string(val) {
+					op += idx
+					op = strings.TrimSpace(op)
+				}
+			}
 		}
+		if len(op) > 1 {
+			panic("более одного операнта")
+		}
+		numA = strings.Split(usertext, op)[0]
+		numB = strings.Split(usertext, op)[1]
+		intA, _ := strconv.Atoi(strings.TrimSpace(numA))
+		intB, _ := strconv.Atoi(strings.TrimSpace(numB))
 
 		if intA == 0 && intB == 0 {
 			rimsk = true
@@ -90,8 +114,8 @@ func main() {
 		}
 
 		if rimsk == true {
-			intA = numRimsk[numA]
-			intB = numRimsk[numB]
+			intA = numRimsk[strings.TrimSpace(numA)]
+			intB = numRimsk[strings.TrimSpace(numB)]
 		}
 
 		if intA >= 1 && intA <= 10 && intB >= 1 && intB <= 10 {
@@ -118,13 +142,15 @@ func main() {
 				if res < 1 {
 					panic("Результат меньше единицы")
 				} else {
-					fmt.Println(numIntToRimsk[res])
+					//fmt.Println(numIntToRimsk[res])
+					intToRimsk(res)
 				}
 			}
 
 		} else {
 			panic("Ошибка. Вводимые числа должны быть от 1 до 10 (I - X)")
 		}
+
 		fmt.Println("")
 		fmt.Println("")
 		fmt.Println("Следующее вычисление:")
